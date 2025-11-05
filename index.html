@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quran Digital - API & Seluruh Ayat</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet" />
+<style>
+  /* Animasi background */
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(270deg, #004d00, #000000, #003300, #000000);
+    background-size: 800% 800%;
+    animation: gradientBG 20s ease infinite;
+    color: #DDFFCC;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 900px;
+    width: 100%;
+    background: rgba(0, 40, 0, 0.92);
+    border-radius: 12px;
+    box-shadow: 0 0 25px #00ff00aa;
+    padding: 30px 40px;
+  }
+
+  h1 {
+    text-align: center;
+    font-weight: 900;
+    text-shadow: 0 0 8px #00ff00cc;
+    margin-bottom: 18px;
+  }
+
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+    color: #aaffaa;
+  }
+
+  select {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #003300;
+    color: #ddffaa;
+    font-weight: bold;
+    border: none;
+    box-shadow: 0 0 10px #00ff0077;
+    margin-bottom: 20px;
+    cursor: pointer;
+  }
+  select:hover, select:focus {
+    background-color: #005500;
+    outline: none;
+  }
+
+  .surat {
+    margin-bottom: 20px;
+  }
+
+  /* Ayat card */
+  .ayat {
+    margin-bottom: 18px;
+    background: linear-gradient(180deg, rgba(0,50,0,0.65), rgba(0,40,0,0.45));
+    border-radius: 10px;
+    padding: 16px 22px;
+    box-shadow: 0 0 12px #00ff00aa;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .ayat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 28px #00ff00ee;
+  }
+
+  .verse-number {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    background: rgba(255,255,255,0.06);
+    color: #c9ffd3;
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  .arabic {
+    font-family: 'Amiri', serif;
+    font-size: 2.05rem;
+    color: #dfffd9;
+    text-align: right;
+    direction: rtl;
+    margin-bottom: 10px;
+    text-shadow: 0 0 6px #007700;
+    word-break: break-word;
+    padding-right: 60px; /* space for verse number visual breathing */
+  }
+
+  .latin {
+    font-style: normal;
+    font-size: 1rem;
+    color: #ffd84d; /* kuning */
+    margin-bottom: 6px;
+    font-weight: 700;
+    padding-right: 60px;
+  }
+
+  .terjemahan {
+    font-size: 1.05rem;
+    color: #ff6b6b; /* merah */
+    line-height: 1.5;
+    padding-right: 60px;
+  }
+
+  .loading {
+    font-style: italic;
+    font-size: 1.1rem;
+    text-align: center;
+    margin: 30px 0;
+    color: #99ff99;
+  }
+
+  footer {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 13px;
+    color: #66bb66aa;
+  }
+
+  @media (max-width: 600px) {
+    .arabic { font-size: 1.6rem; }
+    .container { padding: 18px; }
+    .verse-number { left: 10px; top: 10px; padding: 5px 8px; font-size: 0.85rem; }
+  }
+
+  /* Artikel pembuka */
+  .article {
+    background: rgba(0, 50, 0, 0.6);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 18px #00ff0077;
+    color: #eaffee;
+    line-height: 1.6;
+    animation: fadeIn 0.75s ease;
+    margin-bottom: 18px;
+  }
+  .article h2 {
+    text-align: center;
+    text-shadow: 0 0 8px #00ff00cc;
+    margin-bottom: 12px;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Quran Digital (API AlQuran.cloud)</h1>
+
+  <label for="suratSelect">Pilih Surat (Surah):</label>
+  <select id="suratSelect" aria-label="Pilih Surat Quran">
+    <option value="">-- Memuat daftar surat... --</option>
+  </select>
+
+  <div id="introArticle" class="article">
+    <h2>Selamat Datang di Quran Digital 🌙</h2>
+    <p>
+      Aplikasi ini memungkinkan kamu untuk membaca Al-Qur’an secara lengkap, 
+      ayat demi ayat, beserta terjemahan Bahasa Indonesia dan transliterasi Latin.
+    </p>
+    <p>
+      Pilih surat pada menu di atas untuk mulai membaca. 
+      Setiap ayat menampilkan teks Arab, transliterasi (Latin), dan arti.
+      Nomor ayat juga ditampilkan agar mudah merujuk atau membagikan.
+    </p>
+    <p>
+      Data ayat bersumber dari <strong>API AlQuran.cloud</strong>.
+      Jika transliterasi tidak muncul untuk beberapa ayat, itu akan otomatis disembunyikan.
+    </p>
+    <p>
+      Semoga membantu memperbanyak tadabbur dan memperindah bacaan kita. 🌿
+    </p>
+  </div>
+
+  <div id="suratContainer" class="surat"></div>
+  <div id="loading" class="loading" style="display:none;">Memuat ayat...</div>
+
+  <footer>
+    Dibuat dengan ❤️ oleh ChatGPT — Data dari API Quran Cloud
+  </footer>
+</div>
+
+<script>
+const suratSelect = document.getElementById('suratSelect');
+const suratContainer = document.getElementById('suratContainer');
+const loading = document.getElementById('loading');
+const introArticle = document.getElementById('introArticle');
+
+// Ambil daftar surat
+async function fetchSuratList() {
+  try {
+    const res = await fetch('https://api.alquran.cloud/v1/surah');
+    const data = await res.json();
+    if (data.code === 200 && Array.isArray(data.data)) {
+      populateSuratOptions(data.data);
+    } else {
+      suratSelect.innerHTML = '<option value="">Gagal memuat daftar surat</option>';
+    }
+  } catch (err) {
+    suratSelect.innerHTML = '<option value="">Error memuat daftar surat</option>';
+    console.error(err);
+  }
+}
+
+function populateSuratOptions(list) {
+  suratSelect.innerHTML = '<option value="">-- Pilih Surat --</option>';
+  list.forEach(s => {
+    const op = document.createElement('option');
+    op.value = s.number;
+    op.textContent = `${s.number}. ${s.englishName} (${s.name})`;
+    suratSelect.appendChild(op);
+  });
+}
+
+// Ambil ayat per surat termasuk translit jika tersedia
+async function fetchSuratAyat(no) {
+  if (!no) {
+    suratContainer.innerHTML = "";
+    return;
+  }
+
+  loading.style.display = "block";
+  suratContainer.innerHTML = "";
+
+  try {
+    // Request tiga edition: Arab (quran-quranulkarim), ID (id.indonesian), Transliteration (en.transliteration)
+    const url = `https://api.alquran.cloud/v1/surah/${no}/editions/quran-quranulkarim,id.indonesian,en.transliteration`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.code !== 200 || !Array.isArray(json.data)) {
+      throw new Error(json.status || 'Unknown API error');
+    }
+
+    // Temukan masing-masing data berdasarkan edition identifier (lebih robust)
+    const arabObj = json.data.find(d => d.edition && (d.edition.identifier === 'quran-quranulkarim' || d.edition.language === 'ar'));
+    const idObj   = json.data.find(d => d.edition && (d.edition.identifier === 'id.indonesian' || d.edition.language === 'id'));
+    const trObj   = json.data.find(d => d.edition && (d.edition.identifier && d.edition.identifier.includes('transliteration')));
+
+    if (!arabObj || !idObj) throw new Error('Data ayat tidak lengkap dari API');
+
+    const arab = arabObj.ayahs || [];
+    const ind  = idObj.ayahs  || [];
+    const tr   = trObj ? (trObj.ayahs || []) : null;
+
+    // Header surat
+    const meta = arabObj.surah || arabObj; // fallback, but API returns surah metadata on top-level sometimes
+    // Build header
+    const header = document.createElement('h2');
+    header.style.textAlign = 'center';
+    header.style.marginBottom = '14px';
+    const englishName = (arabObj.englishName) || (meta.englishName || '');
+    const name = (arabObj.name) || (meta.name || '');
+    const number = arabObj.number || no;
+    const revelation = arabObj.revelationType || (meta.revelationType || '');
+    const ayahCount = arabObj.numberOfAyahs || (meta.numberOfAyahs || arab.length);
+    header.innerHTML = `Surat ${englishName || '—'} (${number}) - ${name} 
+      <br><small>${revelation} • ${ayahCount} ayat</small>`;
+    suratContainer.appendChild(header);
+
+    // Use fragment for performance
+    const frag = document.createDocumentFragment();
+
+    for (let i = 0; i < arab.length; i++) {
+      const ay = arab[i];
+      const ayaText = ay && ay.text ? ay.text : '';
+      const terjemahText = (ind[i] && ind[i].text) ? ind[i].text : '';
+      const latinText = (tr && tr[i] && tr[i].text) ? tr[i].text : '';
+
+      const wrap = document.createElement('div');
+      wrap.className = 'ayat';
+
+      // Verse number (1-based)
+      const num = document.createElement('div');
+      num.className = 'verse-number';
+      num.textContent = (i + 1);
+      wrap.appendChild(num);
+
+      // Arabic
+      const arabDiv = document.createElement('div');
+      arabDiv.className = 'arabic';
+      arabDiv.innerHTML = ayaText;
+      wrap.appendChild(arabDiv);
+
+      // Latin transliteration (if available)
+      if (latinText) {
+        const latDiv = document.createElement('div');
+        latDiv.className = 'latin';
+        latDiv.textContent = latinText;
+        wrap.appendChild(latDiv);
+      }
+
+      // Terjemahan / arti
+      const terjemahDiv = document.createElement('div');
+      terjemahDiv.className = 'terjemahan';
+      terjemahDiv.textContent = terjemahText;
+      wrap.appendChild(terjemahDiv);
+
+      frag.appendChild(wrap);
+    }
+
+    suratContainer.appendChild(frag);
+
+  } catch (e) {
+    console.error(e);
+    suratContainer.innerHTML = `<p style="color:#ff7777;">Gagal memuat ayat: ${e.message}</p>`;
+  } finally {
+    loading.style.display = "none";
+  }
+}
+
+// Saat user memilih surat
+suratSelect.addEventListener('change', () => {
+  if (introArticle) introArticle.style.display = 'none';
+  fetchSuratAyat(suratSelect.value);
+});
+
+// Inisialisasi
+fetchSuratList();
+</script>
+</body>
+</html>
